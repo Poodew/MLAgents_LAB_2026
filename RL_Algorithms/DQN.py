@@ -155,8 +155,7 @@ class DQNAgent:
 if __name__ == '__main__':
     # 유니티 환경 경로 설정 (file_name)
     engine_configuration_channel = EngineConfigurationChannel()
-    env = UnityEnvironment(file_name=env_name,
-                           side_channels=[engine_configuration_channel])
+    env = UnityEnvironment(side_channels=[engine_configuration_channel])
     env.reset()
 
     # 유니티 브레인 설정
@@ -177,8 +176,7 @@ if __name__ == '__main__':
             train_mode = False
             engine_configuration_channel.set_configuration_parameters(time_scale=1.0)
 
-        preprocess = lambda obs, goal: np.concatenate((obs * goal[0][0], obs * goal[0][1]), axis=-1)
-        state = dec.obs[0]
+        state = dec.obs[0][0]
         action = agent.get_action(state, train_mode)
         real_action = action + 1
         action_tuple = ActionTuple()
@@ -188,12 +186,12 @@ if __name__ == '__main__':
 
         dec, term = env.get_steps(behavior_name)
         done = len(term.agent_id) > 0
-        reward = term.reward if done else dec.reward
+        reward = term.reward[0] if done else dec.reward[0]
         next_state = term.obs[0][0] if done else dec.obs[0][0]
-        score += reward[0]
+        score += reward
 
         if train_mode:
-            agent.append_sample(state[0], action[0], reward, next_state[0], [done])
+            agent.append_sample(state, action, reward, next_state, [done])
 
         if train_mode and step > max(batch_size, train_start_step):
             # 학습 수행
@@ -212,8 +210,8 @@ if __name__ == '__main__':
             # 게임 진행 상황 출력 및 텐서 보드에 보상과 손실함수 값 기록
             if episode % print_interval == 0:
                 mean_score = np.mean(scores)
-                mean_loss = np.mean(losses)
-                agent.write_summray(mean_score, mean_loss, agent.epsilon, step)
+                mean_loss = np.mean(losses) if losses else 0
+                agent.write_summary(mean_score, mean_loss, agent.epsilon, step)
                 losses, scores = [], []
 
                 print(f"{episode} Episode / Step: {step} / Score: {mean_score:.2f} / " + \

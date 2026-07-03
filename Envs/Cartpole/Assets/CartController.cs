@@ -7,8 +7,12 @@ public class CartController : MonoBehaviour
     [SerializeField] Rigidbody poleRb;
     [SerializeField] HingeJoint pole;
 
-    float cartX;
-    float poleAngle;
+    public float cartX;
+    public float cartVel;
+    public float poleAngle;
+    public float poleAngVel;
+
+    public float currentTime = 0;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -20,9 +24,14 @@ public class CartController : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        currentTime += Time.deltaTime;
+
         float k = Input.GetAxisRaw("Horizontal");
+
         cartX = cartRb.transform.position.x;
+        cartVel = cartRb.linearVelocity.x;
         poleAngle = pole.angle;
+        poleAngVel = poleRb.angularVelocity.z;
 
         if (IsEpisodeOver())
             ResetEpisode();
@@ -44,6 +53,8 @@ public class CartController : MonoBehaviour
 
     public void ResetEpisode()
     {
+        currentTime = 0;
+
         cartRb.position = Vector3.zero;
         poleRb.position = Vector3.zero;
 
