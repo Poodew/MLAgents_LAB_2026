@@ -86,3 +86,11 @@
 # 기타 유니티 바이너리 에셋
 *.cubemap filter=lfs diff=lfs merge=lfs -text
 *.lighting filter=lfs diff=lfs merge=lfs -text
+
+# 프로그래밍 언어
+*.shader linguist-vendored
+*.shadergraph linguist-vendored
+*.hlsl linguist-vendored
+*.cginc linguist-vendored
+*.compute linguist-vendored
+*.mat linguist-vendored

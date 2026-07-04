@@ -1071,7 +1071,7 @@ MonoBehaviour:
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
-  m_BehaviorType: 0
+  m_BehaviorType: 2
   m_BehaviorName: CartpoleBehavior
   TeamId: 0
   m_UseChildSensors: 1
@@ -1094,7 +1094,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
-  controller: {fileID: 0}
+  controller: {fileID: 1521858653}
 --- !u!1 &1531661186
 GameObject:
   m_ObjectHideFlags: 0
@@ -1291,7 +1291,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5236765034847410049, guid: 591edd2598bd06a478b18b9c8762ddaa, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.0194
+      value: -0.03951
       objectReference: {fileID: 0}
     - target: {fileID: 5236765034847410049, guid: 591edd2598bd06a478b18b9c8762ddaa, type: 3}
       propertyPath: m_LocalPosition.z
