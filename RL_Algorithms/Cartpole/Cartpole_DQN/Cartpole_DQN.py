@@ -29,14 +29,14 @@ learning_rate = 0.00025 #학습률
 #Episode 관련 Parameters
 max_episodes = 1000 #최대 Episode
 max_step = 500 #한 에피소드 당 최대 step
-test_start_episode = 100 #Replay Memory를 채운 뒤 신경망 학습(Gradient Update)을 시작하는 Episode
+test_start_episode = 500 #Replay Memory를 채운 뒤 신경망 학습(Gradient Update)을 종료하는 Episode
+update_target_episode = 20 # target network 업데이트 Episode 주기
 
 #상황 저장 관련 Parameters
-save_interval = 10 #모델 저장 Episode 주기
+save_interval = 20 #모델 저장 Episode 주기
 
 #epsilon 관련 Parameters
 epsilon_train = 1.0 # 학습 시작 시 e 확률
-epsilon = epsilon_train
 epsilon_min = 0.01 # 최소 e 확률
 epsilon_decay = 0.995 # e 확률 감소량
 
@@ -100,7 +100,8 @@ class DQNAgent:
 
     #DQN 알고리즘을 통한 모델 학습
     def train_model(self):
-        batch = random.sample(self.memory, batch_size) #Replay Memory에서 랜덤으로 S, A, R, S' 가져옴
+        # Replay Memory에서 랜덤으로 S, A, R, S' 가져옴
+        batch = random.sample(self.memory, batch_size)
         state = np.stack([b[0] for b in batch], axis = 0)
         action = np.stack([b[1] for b in batch], axis = 0)
         reward = np.stack([b[2] for b in batch], axis=0)
@@ -137,9 +138,11 @@ class DQNAgent:
     #네트워크 모델 저장
     def save_model(self):
         print(f"...Save Model to {save_path}/ckpt ...")
-        torch.save({"network" : self.network.state_dict(),
-                    "optimizer" : self.optimizer.state_dict()}
-                   , save_path + "/ckpt.")
+        torch.save({
+            "network": self.network.state_dict(),
+            "optimizer": self.optimizer.state_dict(),
+            "epsilon": self.epsilon
+        }, f"{save_path}/ckpt_{episode}.pt")
 
     # Tensorboard에 학습 기록
     def write_summary(self, score, loss,  epsilon, episode):
@@ -173,6 +176,10 @@ if __name__ == '__main__':
             train_mode = False
             engine_configuration_channel.set_configuration_parameters(time_scale=1.0)
 
+        env.reset()
+        dec, term = env.get_steps(behavior_name)
+        state = dec.obs[0][0]
+
         done = False
         for step in range(max_step):
             state = dec.obs[0][0]
@@ -192,17 +199,18 @@ if __name__ == '__main__':
 
             if train_mode:
                 agent.append_sample(state, action, reward, next_state, done)
+            state = next_state
 
             if train_mode and len(agent.memory) >= batch_size:
                 loss = agent.train_model()
                 losses.append(loss)
 
-            if done:
-                epsilon *= epsilon_decay  # epsilon 확률 감소
-                epsilon = max(epsilon_min, epsilon)
+            if done or step == max_step - 1:
+                agent.epsilon *= epsilon_decay
+                agent.epsilon = max(epsilon_min, agent.epsilon)
                 break
 
-        if train_mode:
+        if train_mode and episode % update_target_episode == 0:
             agent.update_target()
 
         mean_loss = np.mean(losses) if losses else 0

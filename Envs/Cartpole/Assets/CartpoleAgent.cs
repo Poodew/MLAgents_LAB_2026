@@ -31,12 +31,7 @@ public class CartpoleAgent : Agent
         int action = actionBuffers.DiscreteActions[0];
         Debug.Log($"Action: {action}");
 
-        float input = 0;
-        if (action == 0)
-            input = -1f;   // 왼쪽
-        else if (action == 1)
-            input = 1f;    // 오른쪽
-        
+        float input = action == 0 ? -1f : 1f;
         controller.Move(input);
 
         AddReward(0.01f);
@@ -46,6 +41,11 @@ public class CartpoleAgent : Agent
             AddReward(-1f);
             EndEpisode();
         }
+    }
+
+    public override void OnEpisodeBegin()
+    {
+        controller.ResetEnv();
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)

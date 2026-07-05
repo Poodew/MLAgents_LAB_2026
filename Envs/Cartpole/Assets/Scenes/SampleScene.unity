@@ -1094,7 +1094,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
-  controller: {fileID: 0}
+  controller: {fileID: 1521858653}
 --- !u!1 &1531661186
 GameObject:
   m_ObjectHideFlags: 0
