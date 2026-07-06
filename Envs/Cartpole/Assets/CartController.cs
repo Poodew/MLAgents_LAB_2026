@@ -63,7 +63,8 @@ public class CartController : MonoBehaviour
     {
         currentTime = 0;
 
-        cartRb.position = Vector3.zero;
+        cartRb.position =
+            new Vector3(Random.Range(-0.2f, 0.2f), 0, 0);
         poleRb.position = Vector3.zero;
 
         cartRb.rotation = Quaternion.identity;

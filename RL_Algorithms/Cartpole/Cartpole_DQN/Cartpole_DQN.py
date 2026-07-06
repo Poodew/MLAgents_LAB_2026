@@ -29,8 +29,9 @@ learning_rate = 0.00025 #학습률
 #Episode 관련 Parameters
 max_episodes = 1000 #최대 Episode
 max_step = 500 #한 에피소드 당 최대 step
-test_start_episode = 500 #Replay Memory를 채운 뒤 신경망 학습(Gradient Update)을 종료하는 Episode
-update_target_episode = 20 # target network 업데이트 Episode 주기
+train_start_episode = 100 #epsilon이 줄어들기 시작하는 Episode
+test_start_episode = 400 #Replay Memory를 채운 뒤 신경망 학습(Gradient Update)을 종료하는 Episode
+update_target_episode = 10 # target network 업데이트 Episode 주기
 
 #상황 저장 관련 Parameters
 save_interval = 20 #모델 저장 Episode 주기
@@ -38,7 +39,7 @@ save_interval = 20 #모델 저장 Episode 주기
 #epsilon 관련 Parameters
 epsilon_train = 1.0 # 학습 시작 시 e 확률
 epsilon_min = 0.01 # 최소 e 확률
-epsilon_decay = 0.995 # e 확률 감소량
+epsilon_decay = 0.98 # e 확률 감소량
 
 #Unity 환경 관련 Parameters
 game = "Cartpole" #빌드 파일 이름
@@ -145,10 +146,14 @@ class DQNAgent:
         }, f"{save_path}/ckpt_{episode}.pt")
 
     # Tensorboard에 학습 기록
-    def write_summary(self, score, loss,  epsilon, episode):
+    def write_summary(self, score, loss,  epsilon, position, angle, episode):
         self.writer.add_scalar("run/score", score, episode)
         self.writer.add_scalar("model/loss", loss, episode)
         self.writer.add_scalar("model/epsilon", epsilon, episode)
+
+        if episode > test_start_episode:
+            self.writer.add_scalar("state/position", position, episode)
+            self.writer.add_scalar("state/angle", angle, episode)
 
 if __name__ == '__main__':
     # 유니티 환경 설정(Editor Ver)
@@ -159,13 +164,13 @@ if __name__ == '__main__':
     # 유니티 브레인 설정
     behavior_name = list(env.behavior_specs.keys())[0]
     spec = env.behavior_specs[behavior_name]
-    engine_configuration_channel.set_configuration_parameters(time_scale=12.0)
+    engine_configuration_channel.set_configuration_parameters(time_scale=24.0)
     dec, term = env.get_steps(behavior_name)
 
     # DQNAgent 클래스를 agent로 정의
     agent = DQNAgent()
 
-    losses, score = [], 0
+    losses, score, position, angle = [], 0, [], []
 
     for episode in range(max_episodes):
 
@@ -183,6 +188,9 @@ if __name__ == '__main__':
         done = False
         for step in range(max_step):
             state = dec.obs[0][0]
+            position.append(state[0])
+            angle.append(state[2])
+
             action = agent.get_action(state, train_mode)
             action_tuple = ActionTuple()
             action_tuple.add_discrete(np.array([[action]], dtype=np.int32))
@@ -206,20 +214,23 @@ if __name__ == '__main__':
                 losses.append(loss)
 
             if done or step == max_step - 1:
-                agent.epsilon *= epsilon_decay
-                agent.epsilon = max(epsilon_min, agent.epsilon)
+                if episode >= train_start_episode:
+                    agent.epsilon *= epsilon_decay
+                    agent.epsilon = max(epsilon_min, agent.epsilon)
                 break
 
         if train_mode and episode % update_target_episode == 0:
             agent.update_target()
 
         mean_loss = np.mean(losses) if losses else 0
-        agent.write_summary(score, mean_loss, agent.epsilon, episode)
+        mean_position = np.mean(position) if position else 0
+        mean_angle = np.mean(angle) if angle else 0
+        agent.write_summary(score, mean_loss, agent.epsilon, mean_position, mean_angle, episode)
 
         print(f"{episode} Episode / Score: {score:.2f} / "
               f"Loss: {mean_loss:.4f} / Epsilon: {agent.epsilon:.4f}")
 
-        losses, score = [], 0
+        losses, score, position, angle = [], 0, [], []
 
         if train_mode and episode % save_interval == 0:
             agent.save_model()
