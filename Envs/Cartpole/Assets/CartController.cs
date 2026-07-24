@@ -28,7 +28,7 @@ public class CartController : MonoBehaviour
     {
         UpdateStates();
         if (IsFailed())
-            ResetEnv();
+            ResetCart();
         Move(Input.GetAxisRaw("Horizontal"));
     }
 
@@ -59,7 +59,7 @@ public class CartController : MonoBehaviour
     }
 
     //에피소드 초기화
-    public void ResetEnv()
+    public void ResetCart()
     {
         currentTime = 0;
 

@@ -109,7 +109,7 @@ class DQNAgent:
         next_state = np.stack([b[3] for b in batch], axis=0)
         done = np.stack([b[4] for b in batch], axis=0)
 
-        #S, A, R, S'를 FloatTensor로 변환
+        #S, A, R, S'를 ensor로 변환
         state = torch.FloatTensor(state).to(device)
         action = torch.LongTensor(action).to(device)
         reward = torch.FloatTensor(reward).view(-1, 1).to(device)

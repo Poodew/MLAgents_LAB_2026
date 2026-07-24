@@ -45,7 +45,7 @@ public class CartpoleAgent : Agent
 
     public override void OnEpisodeBegin()
     {
-        controller.ResetEnv();
+        controller.ResetCart();
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
